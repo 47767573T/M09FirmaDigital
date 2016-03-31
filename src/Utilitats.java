@@ -1,6 +1,5 @@
 import java.io.*;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
 import java.util.Scanner;
 
 /**
@@ -11,17 +10,19 @@ public class Utilitats {
     //11000101011100010101000011010100010011010101000100011101000100010101
 
     static String FILE_PATH = "/home/47767573t/Gitprojects/M09FirmaDigital/src/Teoria.odt";
-    static String ALGORITMO= "MD5"; //Algoritme per conseguir el hash
+    static String ALGORITMO_HASH = "MD5";            //Algoritme per conseguir el hash
+    static String ALGORITMO_ENCRYPTAR = "RSA";
+    static int MEDIDA_CLAVE = 256;
 
     public static void main(String[] args) throws NoSuchAlgorithmException, IOException {
 
         File archivo = new File (FILE_PATH);
 
-        byte[] resultado = digestiona(archivo, ALGORITMO);
+        byte[] resultado = digestiona(archivo, ALGORITMO_HASH);
 
         String hashResultado = getHash(resultado);
 
-        System.out.println("Resultado de codigo en "+ALGORITMO+": "+hashResultado);
+        System.out.println("Resultado de codigo en "+ALGORITMO_HASH+": "+hashResultado);
     }
 
     public static byte[] digestiona(File f, String algoritme) throws NoSuchAlgorithmException, IOException {
@@ -37,7 +38,13 @@ public class Utilitats {
             md.update(buffer);
             caracter = is.read(buffer);
         }
+
+        byte[] res = md.digest();
+        String resStr = getHash(res);
+
         return md.digest();
+
+        System.out.println(resStr);
     }
 
     public static String getHash (byte[] resultado){
@@ -49,6 +56,16 @@ public class Utilitats {
             z += Integer.toHexString(resultado[i] & 0xf);
         }
         return z;
+    }
+
+    public static KeyPair generateKey() throws NoSuchAlgorithmException {
+
+        KeyPairGenerator claveGenerada = KeyPairGenerator.getInstance(ALGORITMO_ENCRYPTAR);
+        claveGenerada .initialize(MEDIDA_CLAVE);
+
+        KeyPair claveRSA = claveGenerada.generateKeyPair();
+
+        return claveRSA;
     }
 
 
