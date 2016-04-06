@@ -1,43 +1,62 @@
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
+import java.security.*;
 
 /**
  * Created by 47767573t on 30/03/16.
  */
 public class Main {
 
-        public static final String PRIVATE_KEY_FILE = "private.key";
+    //TODO: definir la private.key
+    public static final String FICHERO_LLAVE_PRIVADA = "private.key";
+    //TODO fin
 
-        public static final String FICHERO_PLANO = "Teoria.odt";
-        public static final String FICHERO_FIRMADO = "TeoriaFirmada.odt";
+    public static final String FICHERO_PLANO = "/home/47767573t/Gitprojects/M09FirmaDigital/src/Teoria.odt";
+    public static final String FICHERO_FIRMADO = "/home/47767573t/Gitprojects/M09FirmaDigital/src/TeoriaFirmada.odt";
 
-    public static void main(String[] args) throws IOException, NoSuchAlgorithmException, ClassNotFoundException {
+    public static void main(String[] args) throws IOException, NoSuchAlgorithmException, ClassNotFoundException
+            , InvalidKeyException, NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException {
 
         KeyPair keyPair = null;
-        PrivateKey prik = null;
+        PrivateKey priK = null;
 
         File f = new File(FICHERO_PLANO);
 
+/*      keyPair = Utilitats.generateKey();
+        priK = keyPair.getPrivate();
+*/
 
-            keyPair = Utils.generateKey();
-            prik = keyPair.getPrivate();
+        if(!Utilitats.areKeysPresent()){
+            keyPair = Utilitats.generateKey();
+            priK = keyPair.getPrivate();
+        }else{
+            ObjectInputStream ois = null;
+            ois = new ObjectInputStream(new FileInputStream(FICHERO_LLAVE_PRIVADA));
+            priK = (PrivateKey) ois.readObject();
+        }
 
-            ObjectInputStream inputStream = null;
-            inputStream = new ObjectInputStream(new FileInputStream(PRIVATE_KEY_FILE));
-            prik = (PrivateKey) inputStream.readObject();
-
-
-        byte[] digestionat = Utilitats.digestiona(f,"MD5");
-        byte[] encryptdigestionat = Utils.signar(digestionat,prik);
+        byte[] bufferDigestion = Utilitats.digestiona(f,"MD5");
+        byte[] encryptdigestionat = Utilitats.signar(bufferDigestion,priK);
         System.out.println("Longitud del fitxer: "+f.length());
         System.out.println("Longitud de la firma: "+encryptdigestionat.length);
-        Utils.write(FITXER_SIGNAT,Utils.concatenateByteArrays(Utils.read(f),encryptdigestionat));
+        Utilitats.read(f);
+        /*write(file o string, bytes) file <-- bytes*/
+
+        Utilitats.write(
+                FICHERO_FIRMADO
+                ,Utilitats.concatenateByteArrays(
+                        Utilitats.read(f)
+                        ,encryptdigestionat
+                )
+        );
     }
+
+
 
 }

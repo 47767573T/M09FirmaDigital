@@ -1,4 +1,10 @@
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.*;
 import java.util.Scanner;
 
@@ -7,23 +13,10 @@ import java.util.Scanner;
  */
 public class Utilitats {
 
-    //11000101011100010101000011010100010011010101000100011101000100010101
-
     static String FILE_PATH = "/home/47767573t/Gitprojects/M09FirmaDigital/src/Teoria.odt";
     static String ALGORITMO_HASH = "MD5";            //Algoritme per conseguir el hash
     static String ALGORITMO_ENCRYPTAR = "RSA";
-    static int MEDIDA_CLAVE = 256;
-
-    public static void main(String[] args) throws NoSuchAlgorithmException, IOException {
-
-        File archivo = new File (FILE_PATH);
-
-        byte[] resultado = digestiona(archivo, ALGORITMO_HASH);
-
-        String hashResultado = getHash(resultado);
-
-        System.out.println("Resultado de codigo en "+ALGORITMO_HASH+": "+hashResultado);
-    }
+    static int MEDIDA_CLAVE = 1024;
 
     public static byte[] digestiona(File f, String algoritme) throws NoSuchAlgorithmException, IOException {
         MessageDigest md = MessageDigest.getInstance(algoritme);
@@ -39,34 +32,86 @@ public class Utilitats {
             caracter = is.read(buffer);
         }
 
-        byte[] res = md.digest();
-        String resStr = getHash(res);
+        byte[] resultadoDigestion = md.digest();
 
-        return md.digest();
-
-        System.out.println(resStr);
+        return resultadoDigestion;
     }
 
-    public static String getHash (byte[] resultado){
+    public static byte[] signar(byte[] digestionado, PrivateKey priK) throws NoSuchPaddingException, NoSuchAlgorithmException
+            , InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
 
-        String z = "";
+        byte[] bufferCifrado = null;
 
-        for (int i = 0; i < resultado.length; i++) {
-            z += Integer.toHexString((resultado[i] >> 4) & 0xf);
-            z += Integer.toHexString(resultado[i] & 0xf);
-        }
-        return z;
+        Cipher cifrador = Cipher.getInstance("RSA");
+        cifrador.init(Cipher.ENCRYPT_MODE, priK);
+
+        bufferCifrado = cifrador.doFinal(digestionado);
+        System.out.println("texto cifrado");
+        mostrarBuffer(bufferCifrado);
+
+        return bufferCifrado;
+    }
+
+    public static byte[] desencriptar(byte[] digestionado, PublicKey pubK ) throws NoSuchPaddingException, NoSuchAlgorithmException
+            , InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+
+        byte[] bufferDescifrado = null;
+
+        Cipher descifrador = Cipher.getInstance("RSA");
+        descifrador.init(Cipher.DECRYPT_MODE, pubK);
+
+        bufferDescifrado = descifrador.doFinal(digestionado);
+        System.out.println("texto descifrado");
+        mostrarBuffer(bufferDescifrado);
+
+        return bufferDescifrado;
     }
 
     public static KeyPair generateKey() throws NoSuchAlgorithmException {
 
         KeyPairGenerator claveGenerada = KeyPairGenerator.getInstance(ALGORITMO_ENCRYPTAR);
-        claveGenerada .initialize(MEDIDA_CLAVE);
+        claveGenerada.initialize(MEDIDA_CLAVE);
 
         KeyPair claveRSA = claveGenerada.generateKeyPair();
 
         return claveRSA;
     }
 
+    public static boolean areKeysPresent(){
 
+        boolean hayKey = false;
+        File fichero = new File(Main.FICHERO_LLAVE_PRIVADA);
+
+        if (fichero.exists()) {
+            hayKey = true;
+            System.out.println("llave privada existe");
+        }
+
+        return hayKey;
+    }
+
+    public static void mostrarBuffer(byte[] buffer){
+
+        System.out.write(buffer, 0, buffer.length);
+    }
+
+    public static byte[] read (File fichero) throws IOException {
+
+        return Files.readAllBytes(Paths.get(fichero.getAbsolutePath()));
+    }
+
+    public static byte[] concatenateByteArrays(byte[] buffers1, byte[] buffers2) throws IOException {
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream( );
+        bos.write (buffers1);
+        bos.write (buffers2);
+        return bos.toByteArray();
+    }
+
+    public static void write(String fichero, byte[] arrayConcatenat) throws IOException {
+
+        FileOutputStream fos = new FileOutputStream(fichero);
+        fos.write(arrayConcatenat);
+        fos.close();
+    }
 }
