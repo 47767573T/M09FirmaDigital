@@ -4,6 +4,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
 import java.util.Scanner;
@@ -47,7 +48,7 @@ public class Utilitats {
 
         bufferCifrado = cifrador.doFinal(digestionado);
         System.out.println("texto cifrado");
-        mostrarBuffer(bufferCifrado);
+        //mostrarBuffer(bufferCifrado);
 
         return bufferCifrado;
     }
@@ -73,6 +74,7 @@ public class Utilitats {
         claveGenerada.initialize(MEDIDA_CLAVE);
 
         KeyPair claveRSA = claveGenerada.generateKeyPair();
+        System.out.println("Clave generada");
 
         return claveRSA;
     }
@@ -84,7 +86,7 @@ public class Utilitats {
 
         if (fichero.exists()) {
             hayKey = true;
-            System.out.println("llave privada existe");
+            System.out.println("Clave privada existe");
         }
 
         return hayKey;
@@ -108,10 +110,25 @@ public class Utilitats {
         return bos.toByteArray();
     }
 
-    public static void write(String fichero, byte[] arrayConcatenat) throws IOException {
+    public static void write(String fichero, byte[] arrayConcatenada) throws IOException {
 
-        FileOutputStream fos = new FileOutputStream(fichero);
-        fos.write(arrayConcatenat);
+        File f = new File(fichero);
+
+        FileOutputStream fos = new FileOutputStream(f);
+        fos.write(arrayConcatenada);
         fos.close();
     }
+
+    public static byte[] extraerFirma (Path fichero, int longitudFirma) throws IOException {
+
+        byte[] ficheroEnBytes = Files.readAllBytes(fichero);
+        int longituFichero = ficheroEnBytes.length;
+
+        byte[] firmaEnBytes =
+
+
+        return firmaEnBytes;
+
+    }
+
 }

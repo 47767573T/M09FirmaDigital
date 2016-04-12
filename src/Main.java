@@ -48,13 +48,15 @@ public class Main {
         Utilitats.read(f);
         /*write(file o string, bytes) file <-- bytes*/
 
-        Utilitats.write(
-                FICHERO_FIRMADO
-                ,Utilitats.concatenateByteArrays(
-                        Utilitats.read(f)
-                        ,encryptdigestionat
+        Utilitats.write(FICHERO_FIRMADO, Utilitats.concatenateByteArrays(
+                Utilitats.read(f)
+                ,encryptdigestionat
                 )
         );
+
+        System.out.println(Utilitats.extraerFirma(FICHERO_FIRMADO, encryptdigestionat.length));
+
+
     }
 
 
