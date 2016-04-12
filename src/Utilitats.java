@@ -14,7 +14,6 @@ import java.util.Scanner;
  */
 public class Utilitats {
 
-    static String FILE_PATH = "/home/47767573t/Gitprojects/M09FirmaDigital/src/Teoria.odt";
     static String ALGORITMO_HASH = "MD5";            //Algoritme per conseguir el hash
     static String ALGORITMO_ENCRYPTAR = "RSA";
     static int MEDIDA_CLAVE = 1024;
@@ -43,12 +42,14 @@ public class Utilitats {
 
         byte[] bufferCifrado = null;
 
-        Cipher cifrador = Cipher.getInstance("RSA");
+        System.out.println(priK);
+
+        Cipher cifrador = Cipher.getInstance(ALGORITMO_HASH);
         cifrador.init(Cipher.ENCRYPT_MODE, priK);
 
         bufferCifrado = cifrador.doFinal(digestionado);
-        System.out.println("texto cifrado");
-        //mostrarBuffer(bufferCifrado);
+        System.out.println("texto cifrado: ");
+        mostrarBuffer(bufferCifrado);
 
         return bufferCifrado;
     }
@@ -62,19 +63,27 @@ public class Utilitats {
         descifrador.init(Cipher.DECRYPT_MODE, pubK);
 
         bufferDescifrado = descifrador.doFinal(digestionado);
-        System.out.println("texto descifrado");
+        System.out.println("texto descifrado: ");
         mostrarBuffer(bufferDescifrado);
 
         return bufferDescifrado;
     }
 
-    public static KeyPair generateKey() throws NoSuchAlgorithmException {
+    public static KeyPair generateKey( String archivoPK) throws NoSuchAlgorithmException, IOException {
 
         KeyPairGenerator claveGenerada = KeyPairGenerator.getInstance(ALGORITMO_ENCRYPTAR);
         claveGenerada.initialize(MEDIDA_CLAVE);
 
         KeyPair claveRSA = claveGenerada.generateKeyPair();
         System.out.println("Clave generada");
+
+        File f = new File(archivoPK);
+
+        FileOutputStream fos = new FileOutputStream(f);
+        fos.write(claveRSA.getPrivate().hashCode());
+        System.out.println(claveRSA.getPrivate().hashCode());
+        fos.close();
+        System.out.println("Clave guardada");
 
         return claveRSA;
     }
@@ -119,16 +128,32 @@ public class Utilitats {
         fos.close();
     }
 
-    public static byte[] extraerFirma (Path fichero, int longitudFirma) throws IOException {
+    public static byte[] extraerFirma (Path fichero) throws IOException {
 
         byte[] ficheroEnBytes = Files.readAllBytes(fichero);
-        int longituFichero = ficheroEnBytes.length;
+        int inicioDeFirma = ficheroEnBytes.length - MEDIDA_CLAVE;
+        byte[] firmaEnBytes = new byte[MEDIDA_CLAVE];
+        int nuevoIndice = 0;
 
-        byte[] firmaEnBytes =
-
+        for (int i = inicioDeFirma; i < ficheroEnBytes.length; i++) {
+            firmaEnBytes[nuevoIndice] = ficheroEnBytes[i];
+            nuevoIndice++;
+        }
 
         return firmaEnBytes;
+    }
 
+    public static boolean verificarFirma(PublicKey pk, byte[] firmaEnBytes) throws NoSuchAlgorithmException
+            , InvalidKeyException, SignatureException {
+
+        boolean isVerificado = false;
+
+        Signature verificador = Signature.getInstance(ALGORITMO_ENCRYPTAR);
+        verificador.initVerify(pk);
+
+        isVerificado = verificador.verify(firmaEnBytes);
+
+        return isVerificado;
     }
 
 }
